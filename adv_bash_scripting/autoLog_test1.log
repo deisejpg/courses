@@ -1,0 +1,16 @@
+
+1) Call stdStreams with output and error text:
+to standard output: 'text for standard output'
+to standard error:  'text for standard error'
+
+2) Capture stdStreams output in a variable and display it:
+to standard error:  'text for standard error'
+	stdStreams output was:
+to standard output: 'text for standard output'
+
+3) Call echo_se with some text:
+Some random text
+
+4)Capture echo_se function output in a variable and display it:
+Some random text
+echo_se output was: ''

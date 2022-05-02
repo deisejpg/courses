@@ -1,0 +1,241 @@
+ML - Part II
+
+
+Deep learning Overview
+	- you have variables (numerical and descriptive) of a person and you build a model to predict how tall a 1 year old baby is going to be
+	- autonomous drive industry
+	- The GO game
+		- first neural network state - the current state
+		- the second state is to predict the next move
+	- Neural machine translation
+		- google translate software
+
+	- Astronomy, drug discovery, disease diagnosis, molecular diagnosis, neurology, particle physics, social science
+
+Image Recognition - using ImageNet Classification top-5 error (%)
+	The percentage of top-5 error decreases as the number of layers increases. When using "shallow" (meaning < 8 layers) the percentage was 30%; with 152 layers the percentage is ~3%
+
+	Universal Approximation Theory
+
+History
+	60s - Cybernetics
+	90s - Connectionism + Neural Networks
+	10s - Deep Learning
+		Two key factors
+		...
+
+(((Deep Learning), Machine Learning), Artificial Intelligence)
+AI scope
+How do you decide if it is worth to apply AI?
+
+From Linear Regreeesion to Neural Network
+	Example: Predicting hourse price with square footage
+	ID, sqft/10^4, price/10^6
+	sale price y
+	sqft/10^4 x
+
+	train a function  y = w*x to minimize
+	loss = 1/2 * sum(wx)
+
+	Regression
+
+	Model Generalization
+		train using a large dataset (80%) and validade usina a smaller dataset (20%)
+		we derive the value of w using the training dataset
+			value of w can be referred as model
+			...
+
+		Three steps: training, validation, and test
+
+Neural Network
+	we use a bias item: y = w*x + b, or even a
+	the b or a is the regulatization item
+
+	We use the gradient descent algorithm to find ...
+
+
+For ML/deep learning application
+	labeled  data
+	training dataset and validation dataset
+	error/loss
+	model generalization
+		a good model: low training error and low validation error
+
+	w (omega) and b -> a linear model
+	input = x
+	prediction => y = w*x + b
+
+	activate(y)
+
+	the combination of a linear model, a prediction and teh "activate" is a neuron
+	after the layers you know whether you have to update the estimated values or not - this is the back propagation algorithm
+	
+	for each input you will have hidden layers that will lead to the prediction  - it is called neural architecture or neural layers or something like that
+
+
+partial relative loss
+
+
+Stochastic Gradient Descent
+I think it is like - the training dataset is too big to have every single layer visited so a random number is used and the loss is calculated for that number
+
+The notion of Epoch
+the time by which every training data itm is visited once
+so for 1,200,000 images with a 512 mini-batch size, an epoch roughly take 2,400 iterations
+
+How many epochs is enough?
+a somewhat standard ptractice is ...
+
+What we just saw is a feed-forward network
+
+If in any layer, there is a convolution operations, it is called convolutional neural network
+
+	Convolution is the dominate operation in deep learning
+
+Often coupled with pooling operation
+
+Example applications:
+	image classification
+	object detection
+	autonomous driving
+
+This is basically matrix multiplication of linear algebra
+
+AlexNet - used to be the most powerful image classification neural network
+from the data to the to the loss - there is chain of layers that does the convolution operations to reduce the complexity, from each layer a pool is generated
+
+
+## Recursive Neural Network is another typical neural network architecture, mainly used for ordered/sequence input
+RNNs provide a way of use information about Xt-i, ..., Xt-1 for inferring Xt
+Example applications:
+	language models, i.e. auto-correction
+	machine translation
+	auto image captioning
+	speech recognition
+	autogenerating music
+
+## Generative adversarial network
+	Real images -> discriminator network -> predicted labels
+	d-dimensional noise vector -> generator network -> fake images -> discriminator network
+
+	This is being used for interpolation - for example to train datasets of seismic images to fill the gaps present in some images
+
+## Deep Reinforcement Learning
+	agent -<action ai>- environment
+	environment -<state si>- agent or environment -<reward ri>- agent
+	the algorithm is trained to optimize the getting rewared depending on the action you take
+
+Notions
+
+bunch of words to study! They are all connected things!
+
+
+# ML/DL pipeline
+
+telescope, detectors  -> storage & archiving -data-> data processing -processed data-> training -model-> serving (here you can use newly generated observations)
+
+serving -> controller -predictions, like transient events-> telescopes, observations -observations-> serving
+
+
+
+
+Introduction to Keras and TensorFlow
+now let's think about the concepts we saw so far into code
+
+TensorFlow
+- product of google brain team
+- open source symbolic math library ideal for DL computations
+- build up computational graphs operating on n-dimensional arrays (tensors - this is the basic data structure)
+- low level API, difficult to program
+- initial realease 2015, current 1.13.1 released Feb 2019
+
+Keras
+- python API wrapping lower level DL frameworkd including TensorFlow, Theano, and CNTK
+- phylosophy: "being able to go from idea to result with the least possible delay is key to doing good research."
+- provides many common building ...
+...
+
+#linear regression
+from keras.models import sequential
+from keras.layers import Dense
+from keras.datasets import boston_housing
+
+# Load ...
+ and add layer by layer in this model
+
+ optimize = 'sgd' - stochastid gradient descent
+ and the error values taht we want to know ' mean absolute percentage of error'
+
+ -train
+ model.fit
+ -evaluate
+
+
+Sequential vs. Functional API
+- keras provides both a Sequential and Functional API
+- Sequential: simpler for beginners, most tutorials use this
+- Functional: advantages for complex models - Ex. DAGs or shared layers.
+
+Functional API
+this returns a tensor
+inputs = Input(shape-(784,))
+
+a layer instance is callable on a tensor, and returns a tensor
+x = dense(64 hidden units, activation = 'relu')(inputs)
+
+Data processing
+text data - transform text into integer representation
+keras.preprocessing.sequence.pad_sequences
+	ensure sequence inputs are all the same length
+
+image Data 
+	keras.preprocessing.image.ImageDataGenerator
+
+
+Callbacks
+	keras provides a callback mechanism to easily implement
+	examples:
+		checkpoint
+		reduceLROnPlateau (aka reduce the learning rate)
+		EarlyStopping
+
+
+data Generators
+	what happens if your input data does not fit into memory CPU?
+	each iteration of forward/backward pass only works on data set = batch size, relatively small
+	keras allows you to write custom 'data generators' to dynamically load data equal to each batch size
+	automatically handles keeping track on indexes ...
+
+
+CPU vs GPU
+keras can support running on CPU vs GPU, generally with no changes to code
+
+
+Multi-GPU support
+
+
+Hands-on prep #1
+
+What is the effect on train/test metrics and when setting batch size to 128? What about batch size = 1?
+
+What happens if you add dropout after the 2nd hidden layer?
+
+What is the 'mean absolute error' for the test predictions?
+
+What happens to your train/test loss relationship if you set validation_split to 0.1? Why?
+
+Why does the loss flatten out so quickly?
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
