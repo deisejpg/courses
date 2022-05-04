@@ -1,8 +1,8 @@
 ---
-title: "HealthcareAnalyticsR_LinkedInLearning"
-author: "Deise Goncalves"
+title: "Healthcare Analytics in R - LinkedIn Learning"
+author: "Deise Gonçalves"
 date: "5/3/2022"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -19,7 +19,7 @@ getwd()
 
 #### Compilation of r scripts in a markdown format to make it easier to visualize the entire course in single place.
 
-##Chapter2 - Sections 1 to 4
+##Chapter 2 - Sections 1 to 4
 
 Tips:
 Add your own path!
@@ -53,7 +53,7 @@ Both mostly meet the assumption of normal probability of continuous dependent va
 
 But what to do when the assumptions are not met?
 
-##Chapter2 - Section3 
+##Chapter 2 - Section 5 
 
 When the assumptions are not met one can use categorization ans transformation of the data to deal with continuous dependent variables as follows:
 
@@ -111,7 +111,7 @@ hist(BRFSS_sleep$LOGSLEEP,
 ```
 
 
-##Chapter2 - Section4 
+##Chapter 2 - Section 6 
 
 Here we went through indexing a variable that does not meet the assumption. The example dataset was not provided so I only read and understood the code, but did not replicate it here. It uses an equation to combine several categorical variables that measure similar topics together resulting in an ordinal variable. The example given was of three variables measuring cardiovascular diseases.
 Collapses related categorical variables into one continuous variable following a formula.
@@ -172,7 +172,7 @@ plot a histogram to check the distribution (the example data was skewed)
 ```
   
   
-##Chapter2 - Section5  
+##Chapter 2 - Section 7
 
 ```{r}
 #copy to new dataset
@@ -202,7 +202,7 @@ table(BRFSS_sleep$SLEPQUART, BRFSS_sleep$SLEPTIM2)
 One can also make quintiles or tertiles. This approach is good because the quantiles are evenly distributed across categories, however they have unintuitive limits.  
   
   
-##Chapter2 - Section6
+##Chapter 2 - Section 8
 Ranking is an option when the continous data is not normally distributed. Often happens when the sample is very small (like in dentist data) or very large (e.g., platelet count)
 Create a rank variable based on the variable in question and use that in analysis. This is a nonparametric analysis because the rank does not assume a distribution of the data.
 ```{r}
@@ -227,7 +227,7 @@ Using ranks loses data and are not intuitive.
 
 
 
-##Chapter3 - Sections 1 and 2
+##Chapter 3 - Sections 1 and 2
 
 Three phylosophical modeling approaches:
 - forward stepwise
@@ -291,7 +291,7 @@ summary(Model1)
 *Check the ANOVA results. In order to interpret the linear regression if the ANOVA is not significant. The p-value here is significant so we can interpret the linear regression.*
   
 
-##Chapter3 - Section2
+##Chapter 3 - Section 3
 Now we will run model 1 and output it as a .csv file. Then we will run model 2 and also outputing it as a .csv file. We will need these files later.  
   
 We will use tidy() to prepare the data contained in model1 to be saved in .csv.
@@ -366,7 +366,7 @@ cat(tabl2)
 &nbsp;  
 
 
-##Chapter4 - Section1
+##Chapter 4 - Sections 1 to 4
 
 Refreshing the steps:
 - three model specifications
@@ -819,7 +819,7 @@ Adding interactions -> legal, but not recommended
 &nbsp;
 &nbsp;
   
-##Chapter4 - Section5
+##Chapter 4 - Section 5
 ```{r}
 #read in analytic table
 
