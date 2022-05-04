@@ -1,0 +1,954 @@
+---
+title: "HealthcareAnalyticsR_LinkedInLearning"
+author: "Deise Goncalves"
+date: "5/3/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+#loading libraries
+library("devtools")
+library("broom")
+library("arm")
+library("gvlma")
+library("ggplot2")
+library("nlme")
+setwd("/Users/deisejpg/git_repositories/courses/Healthcare_Regression_R/")
+getwd()
+```
+
+#### Compilation of r scripts in a markdown format to make it easier to visualize the entire course in single place.
+
+##Chapter2 - Sections 1 to 4
+
+Tips:
+Add your own path!
+Take a look at the table before continuing, understand the variables you are dealing with
+```{r}
+#read in analytic table
+analytic <- read.csv(file="/Users/deisejpg/git_repositories/courses/Healthcare_Regression_R/data/ch00_analytic.csv", header=TRUE, sep=",")
+
+#Normal probability plot
+#make linear model using grouping variable
+AlcSleepTimeRegression = lm(SLEPTIM2 ~ ALCGRP, data=analytic) 
+
+AlcSleepTimeRegression 
+```
+
+```{r}
+summary(AlcSleepTimeRegression)
+```
+
+
+```{r, echo=FALSE}
+#Make diagnostic plots
+layout(matrix(c(1,2,3,4),2,2)) # optional 4 graphs/page 
+plot(AlcSleepTimeRegression, 
+	main = "Alcohol by Sleep Duration")
+```
+*The first column has the graphs:*
+Top: residuals vs. predicted values to check for linear and additive relationship between dependent and indepented variables and homoscedasticity  
+Bottom: Q-Q plot depicting normal probability plot  
+Both mostly meet the assumption of normal probability of continuous dependent variables for regression Analyses.  
+
+But what to do when the assumptions are not met?
+
+##Chapter2 - Section3 
+
+When the assumptions are not met one can use categorization ans transformation of the data to deal with continuous dependent variables as follows:
+
+```{r}
+#copy to new dataset
+BRFSS_sleep <- analytic
+
+#summary statistics
+summary(BRFSS_sleep$SLEPTIM2)
+```
+
+```{r}
+#look at histogram
+hist(BRFSS_sleep$SLEPTIM2, 
+	main = "Histogram of SLEPTIM2",
+	xlab = "Class SLEPTIM2",
+	ylab = "Frequency",
+	xlim=c(0,15), 
+	ylim=c(0,20000),
+	border = "red",
+	col= "yellow",
+	las = 1,
+	breaks = 24)
+```
+Using summary() we can see the median. Checking the histogram it is possible to see the distribution of the data.  
+Now we can use this to subdivide the variable into two categories separated at the median value.
+```{r}
+#categorize at median
+BRFSS_sleep$SLEEPCAT <- 9
+BRFSS_sleep$SLEEPCAT[BRFSS_sleep$SLEPTIM2 >7] <- 1
+BRFSS_sleep$SLEEPCAT[BRFSS_sleep$SLEPTIM2 <=7] <- 2
+table(BRFSS_sleep$SLEEPCAT, BRFSS_sleep$SLEPTIM2)
+```
+
+Another strategy is to use log transformation. However, the interpretation of log values in healthcare is unintuitive.
+```{r}
+#log transformation
+
+BRFSS_sleep$LOGSLEEP <- log(BRFSS_sleep$SLEPTIM2)
+
+summary(BRFSS_sleep$LOGSLEEP)
+```
+
+```{r}
+hist(BRFSS_sleep$LOGSLEEP, 
+	main = "Histogram of LOGSLEEP",
+	xlab = "Class LOGSLEEP",
+	ylab = "Frequency",
+	xlim=c(0,4), 
+	ylim=c(0,35000),
+	border = "red",
+	col= "yellow",
+	las = 1,
+	breaks = 5)
+```
+
+
+##Chapter2 - Section4 
+
+Here we went through indexing a variable that does not meet the assumption. The example dataset was not provided so I only read and understood the code, but did not replicate it here. It uses an equation to combine several categorical variables that measure similar topics together resulting in an ordinal variable. The example given was of three variables measuring cardiovascular diseases.
+Collapses related categorical variables into one continuous variable following a formula.
+heart attack - HA
+coronary heart disease - CHD
+stroke - STRK
+
+answers coded as:
+yes - 1
+no -  2
+
+vasc_index <- starts an empty column
+then add HA + CHD + STRK and store that in vasc_index
+check it using table()
+plot a histogram to check the distribution (the example data was skewed)
+
+```{r, include=FALSE}
+##load foreign package
+#library(foreign)
+#
+##read in data to R
+#BRFSS_a <- read.xport("C:/Users/Monka Wahi/Analytics/Data/LLCP2014.xpt")
+#
+##example of an index
+#BRFSS_vasc<- BRFSS_a
+#
+##transform variables
+#BRFSS_vasc$HA <- 0
+#BRFSS_vasc$HA[BRFSS_vasc$CVDINFR4 == 1] <- 1
+#table(BRFSS_vasc$HA, BRFSS_vasc$CVDINFR4)
+#
+#BRFSS_vasc$CHD <- 0
+#BRFSS_vasc$CHD[BRFSS_vasc$CVDCRHD4== 1] <- 1
+#table(BRFSS_vasc$CHD, BRFSS_vasc$CVDCRHD4)
+#
+#BRFSS_vasc$STROKE <- 0
+#BRFSS_vasc$STROKE [BRFSS_vasc$CVDSTRK3== 1] <- 1
+#table(BRFSS_vasc$STROKE, BRFSS_vasc$CVDSTRK3)
+#
+##make index
+#BRFSS_vasc$VASCINDEX <- NA
+#BRFSS_vasc$VASCINDEX <- BRFSS_vasc$HA + BRFSS_vasc$CHD + BRFSS_vasc$STROKE
+#table(BRFSS_vasc$VASCINDEX)
+#
+##Look at distribution
+#summary(BRFSS_vasc$VASCINDEX)
+#
+#hist(BRFSS_vasc$VASCINDEX, 
+#	main = "Histogram of VASCINDEX",
+#	xlab = "Class VASCINDEX",
+#	ylab = "Frequency",
+#	xlim=c(0,4), 
+#	ylim=c(0,500000),
+#	border = "red",
+#	col= "yellow",
+#	las = 1,
+#	breaks = 4)
+```
+  
+  
+##Chapter2 - Section5  
+
+```{r}
+#copy to new dataset
+BRFSS_sleep <- analytic
+
+#summary statistics
+#summary(BRFSS_sleep)
+summary(BRFSS_sleep$SLEPTIM2)
+```
+
+```{r}
+#quartiles of SLEPTIM2
+SLEEPQuantiles <- quantile(BRFSS_sleep$SLEPTIM2)
+SLEEPQuantiles
+```
+
+```{r}
+#start the new variable 'SLEPQUART' with default value of 9
+BRFSS_sleep$SLEPQUART <- 9
+BRFSS_sleep$SLEPQUART[BRFSS_sleep$SLEPTIM2 <= 6] <- 1 #code for the first quantile
+BRFSS_sleep$SLEPQUART[BRFSS_sleep$SLEPTIM2 >6 & BRFSS_sleep$SLEPTIM2 <=7] <- 2 #code for the second quantile
+BRFSS_sleep$SLEPQUART[BRFSS_sleep$SLEPTIM2 >7 & BRFSS_sleep$SLEPTIM2 <=8] <- 3 #code for the third quantile
+BRFSS_sleep$SLEPQUART[BRFSS_sleep$SLEPTIM2 >8] <- 4 #code for the fourth quantile
+
+table(BRFSS_sleep$SLEPQUART, BRFSS_sleep$SLEPTIM2)
+```
+One can also make quintiles or tertiles. This approach is good because the quantiles are evenly distributed across categories, however they have unintuitive limits.  
+  
+  
+##Chapter2 - Section6
+Ranking is an option when the continous data is not normally distributed. Often happens when the sample is very small (like in dentist data) or very large (e.g., platelet count)
+Create a rank variable based on the variable in question and use that in analysis. This is a nonparametric analysis because the rank does not assume a distribution of the data.
+```{r}
+#Create rank
+order.sleeptime <- order(-BRFSS_sleep$SLEPTIM2)
+
+#create a new variable 'BRFSS_sleep2' by selecting the data from variable BRFSS_sleep
+#and getting the data sorted from largest sleep time to smalest sleep time
+BRFSS_sleep2 <- BRFSS_sleep[order.sleeptime,]
+
+#rank command used and data stored in the new variable 'SLEPRANK'
+BRFSS_sleep2$SLEPRANK <- rank(BRFSS_sleep2$SLEPTIM2)
+
+#within brackets what is before the comma is row and after the comma is column
+head(BRFSS_sleep2[,c("SLEPRANK","SLEPTIM2")], n=25)
+
+tail(BRFSS_sleep2[,c("SLEPRANK","SLEPTIM2")], n=25)
+```
+This is just a way to deal with a case of a really non normal distribution. The value of the variables won't be used, the data used is the rank instead.
+Using ranks loses data and are not intuitive.
+
+
+
+
+##Chapter3 - Sections 1 and 2
+
+Three phylosophical modeling approaches:
+- forward stepwise
+- backward stepwise
+- ambi-directional stepwise
+
+Both forward and backward stepwise modeling aproaches should produce a similar model from the same data.
+
+We will use forward stepwise model
+
+Order of operation
+Model 1 - straightforward
+Model 2 - straightforward
+Model 3 - iterative
+
+Develop a working model and then try to break it.
+
+How we will do forward stepwise?
+1. Start by running model 1 with only exposure and keep track of model metadata
+2. Exposure plus sex and age and keep track of model metadata
+3. Add one set of confounders to the model, evaluate the parameter estimates, and keep track of model metadata
+  
+  
+Decide if you want to take out any of the next iteration, if so, run the next model without them.
+
+If you don't, run the next model with a new covariate or set of covariates added.
+
+Once you have all the covariates that you think fit in there and you've kicked out all the ones that do not fit, then you have your working final model.
+
+Try to break the model! Try to add back covariates that were removed earlier.
+  
+  
+How to decide what to keep each iteration?
+Required: keep the exposure
+keep only the covariates that are statistically significant
+if a covariant is not significant but is important you can keep it if you think it is necessary to tell the story. Don't keep anything totally not significant  
+
+&nbsp;  
+
+Keep the exposure variables because the whole point of the model is to see if they are significant after adjustment. Those are the ones we are ultimately interested in.
+
+Outline to test models 1,2,3
+Run model 1, look at ANOVA, check if we can move on if we can interpret the output. 
+Understand navigating the output. We will look at what coeficient means. Then we will identify intercepts, slopes and interpret p-values.  
+
+```{r}
+#read in analytic table
+analytic <- read.csv(file="/Users/deisejpg/git_repositories/courses/Healthcare_Regression_R/data/ch00_analytic.csv", header=TRUE, sep=",")
+
+#make Model 1, the regression object for model 1
+#SLEPTIM2 - is the dependent variable
+#DRKMONTHLY, DRKWEEKLY - exposure variables or independent variables
+Model1 = lm(SLEPTIM2 ~ DRKMONTHLY + DRKWEEKLY, data=analytic) 
+
+summary(Model1)
+```
+*Coefficients is another term for slopes and y-intercept. 'Pr(>|t|)' indicates the p-value of the t-statistics for each exposure variable*
+
+*'Signif. codes:' - three asterisks indicate less than 0.001, two asterisks indicates less than 0.01, and one asterisk indicates less than 0.05. A dot indicates 0.1 value, which is not a significant p-value.*
+
+*Check the ANOVA results. In order to interpret the linear regression if the ANOVA is not significant. The p-value here is significant so we can interpret the linear regression.*
+  
+
+##Chapter3 - Section2
+Now we will run model 1 and output it as a .csv file. Then we will run model 2 and also outputing it as a .csv file. We will need these files later.  
+  
+We will use tidy() to prepare the data contained in model1 to be saved in .csv.
+
+```{r}
+#this chunk will use the following libraries to save the models into .csv files
+#library (devtools)
+#library (broom)
+
+Tidy_Model1 <- tidy(Model1)
+write.csv(Tidy_Model1, file = "outputs/LinearRegressionModel1_Ch2S2.csv")
+```
+  
+Note that for model 2 we added a few exposures to add information of sex and age. 
+```{r}
+#make Model 2
+Model2 = lm(SLEPTIM2 ~ DRKMONTHLY + DRKWEEKLY + MALE + AGE2 + AGE3 + AGE4 + AGE5 + AGE6, data=analytic) 
+summary(Model2) 
+```
+
+*Looking at the results, we can see that DRKMONTHLY, DRKWEEKLY, AGE4, AGE5, and AGE6 have pretty significant results. all the other variables did not have significant p-values.*  
+
+*Adjusted R-squared - closer it is to 1 the best the model fits to the data; closer it is to 0 the worst the model fits the data. Check it out and see that it is pretty close to 0, so the model doesn't fit very well. We will need to add more covariance and develop model 3.*  
+
+```{r}
+Tidy_Model2 <- tidy(Model2)
+write.csv(Tidy_Model2, file = "outputs/LinearRegressionModel2_Ch3S2.csv")
+```
+
+  
+Document model metadata
+
+model metadata - basically it keeps notes of our models, recording what is important to remember about the model
+- keep track about important pieces of the models
+- keep track of only the important information
+- help you reflect on your modeling process
+- most important to do during the forward stepwise process
+  
+Variety of ways these are documented (including not documented)
+For linear regression, I keep track of:
+- covariates in the model
+- which ones were significant
+- adjusted r-squared
+- comments to myself  
+
+&nbsp;  
+
+Keep everything organized on an excel spreadsheet in the following format:
+
+
+```{r table1, echo=FALSE, message=FALSE, results='asis'}
+tabl <- "
+| models | covariates | significant covariates | adjusted r-squared | comments |
+| ------ | ---------- | :--------------------: | ------------------ | -------: |
+|        |            |                        |                    |          |
+"
+cat(tabl)
+```
+
+Now let's fill up the table with our data from models 1 and 2:
+```{r table2, echo=FALSE, message=FALSE, results='asis'}
+tabl2 <- "
+| models |  covariates                                           |  significant covariates     |  adjusted r-squared  |  comments  |
+| ------ | ----------------------------------------------------- | :-------------------------: | -------------------- | ---------: |
+|    1   |  DRKMONTHLY + DRKWEEKLY                               |  DRKMONTHLY                 |  0.0002203           |  Model 1   |
+|    2   |  DRKMONTHLY+DRKWEEKLY+MALE+AGE2+ AGE3+AGE4+AGE5+AGE6   |  DRKWEEKLY+AGE4+AGE5+AGE6   |  0.05212             |  Model 2   |
+|    3   |                                                       |                             |                      |            |
+"
+cat(tabl2)
+```
+
+&nbsp;  
+
+
+##Chapter4 - Section1
+
+Refreshing the steps:
+- three model specifications
+- review forward stepwise modeling process
+- how to decide what covariates to keep
+- demonstration of the beginning of model 3 forward stepwise modeling process
+
+So far we ran model 1 and model 2. The next step is to run model 3. We can start running model 3 by removing the exposures that were not significant in model 2. Then, after runnin that model we can add one set of confounders to the model, evaluate the parameter estimates, and keep track of models metadata.  
+
+
+```{r}
+#read in analytic table
+#analytic <- read.csv(file="D:/Dropbox/Dropbox/R Stats Book/Analytics/Data/analytic.csv", header=TRUE, sep=",")
+#summary(Model2)
+
+#Start with Model 2 with the not significant covariates removed
+Model3 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6, data=analytic) 
+summary(Model3) 
+```
+
+Let's update the table with model3:
+```{r table3, echo=FALSE, message=FALSE, results='asis'}
+tabl3 <- "
+| models |  covariates                                           |  significant covariates     |  adjusted r-squared  |  comments  |
+| ------ | ----------------------------------------------------- | :-------------------------: | -------------------- | ---------: |
+|    1   |  DRKMONTHLY + DRKWEEKLY                               |  DRKMONTHLY                 |  0.0002203           |  Model 1   |
+|    2   |  DRKMONTHLY+DRKWEEKLY+MALE+AGE2+ AGE3+AGE4+AGE5+AGE6   |  DRKWEEKLY+AGE4+AGE5+AGE6   |  0.05212             |  Model 2   |
+|    3   |  DRKWEEKLY+AGE4+AGE5+AGE6                             |  all                        |  0.0519              |  Model 3   |
+"
+cat(tabl3)
+```
+$nbsp  
+
+Note that the model is slightly better but still not very significant.
+
+```{r}
+#add smoker
+Model4 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER, data=analytic) 
+summary(Model4) 
+```
+  
+Let's update the table with model4:
+```{r table4, echo=FALSE, message=FALSE, results='asis'}
+tabl4 <- "                                                                      
+| models |  covariates                                                                                                                                             |  significant covariates                        |  adjusted r-squared  |  comments  |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------: | -------------------- | ------------------------------------:  |
+|    1   |  DRKMONTHLY + DRKWEEKLY                                                                                                                                 |  DRKMONTHLY                                    |  0.0002203           |  Model 1                               |
+|    2   |  DRKMONTHLY + DRKWEEKLY + MALE + AGE2 + AGE3 + AGE4 + AGE5 + AGE6                                                                                                     |  DRKWEEKLY+AGE4+AGE5+AGE6                      |  0.05212             |  Model 2                               |
+|    3   |  DRKWEEKLY+AGE4+AGE5+AGE6                                                                                                                               |  all                                           |  0.0519              |  only signif. covariates from model2   |
+|    4   |  DRKWEEKLY + AGE4 + AGE5 + AGE6 + SMOKER                                                                                                                        |  all                                           |  0.05501             |  Model 4                               |
+|    5   |  DRKWEEKLY + AGE4 + AGE5 + AGE6 + SMOKER + HISPANIC                                                                                                               |  all                                           |  0.05531             |                                        |
+|    6   |  DRKWEEKLY + AGE4 + AGE5 + AGE6 + SMOKER + HISPANIC +  BLACK + ASIAN + OTHRACE                                                                                           |  all except DRKWEEKLY=0.01                     |  0.05818             |                                        |
+|    7   |  DRKWEEKLY + AGE4 + AGE5 + AGE6 + SMOKER + HISPANIC +  BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR                                                                        |  all except DRKWEEKLY=0.02                     |  0.05908             |                                        |
+|    8   |  DRKWEEKLY + AGE4 + AGE5 + AGE6 + SMOKER + HISPANIC +  BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR +  FAIRHLTH + POORHLTH                                                      |  all except DRKWEEKLY=0.62                     |  0.06106             |                                        |
+|    9   |  DRKWEEKLY + AGE4 + AGE5 + AGE6 + SMOKER + HISPANIC +  BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR +  FAIRHLTH + POORHLTH + NOPLAN                                               |  all except DRKWEEKLY=0.62                     |  0.06104             |                                        |
+|   10   |  DRKWEEKLY + AGE4 + AGE5 + AGE6 + SMOKER + HISPANIC +  BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR +  FAIRHLTH + POORHLTH + LOWED + SOMECOLL                                       |  DRKWEEKLY=0.56, LOWED=0.370099                |  0.06123             |                                        |
+|   11   |  DRKWEEKLY + AGE4 + AGE5 + AGE6 + SMOKER + HISPANIC +  BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR +  FAIRHLTH + POORHLTH + SOMECOLL                                             |  all                                           |  0.06123             |                                        |
+|   12   |  all from model 11 + INC1 + INC2 + INC3 + INC4 + INC5  + INC6 + INC7                                                                                                   |  all except DRKWEEKLY,INC2,INC3,INC4,INC5,INC6 |  0.06123             | INC2 and INC7 = 0.05                   |
+|   13   |  all from model 11 + INC2 + INC7                                                                                                                            |  all                                           |  0.06134             | INC2=0.05 and INC7=0.1                 |
+|   14   |  all from model 11 + INC2 + INC7 + UNDWT + OVWT +  OBESE                                                                                                           |  all except DRKWEEKLY,UNDWT                    |  0.06234             | INC2=0.05 and INC7=0.1                 |
+|   15   |  all from model 11 + INC2 + INC7 + OVWT + OBESE                                                                                                                 |  all except DRKWEEKLY                          |  0.06234             | INC2=0.05 and INC7=0.1                 |
+|   16   |  all from model 11 + INC2 + INC7 + OVWT + OBESE +  NOEXER                                                                                                          |  all except DRKWEEKLY, NOEXER                  |  0.06233             | INC2=0.05 and INC7=0.1                 |
+|   17   |  all from model 11 + INC2 + INC7 + OVWT + OBESE +  MALE                                                                                                            |  all except DRKWEEKLY, MALE                    |  0.06233             | INC2=0.05 and INC7=0.1                 |
+|   18   |  all from model 11 + INC2 + INC7 + OVWT + OBESE +  AGE2 + AGE3                                                                                                       |  all except DRKWEEKLY, AGE2                    |  0.06256             | INC2=0.05, INC7=0.1, AGE3=0.1          |
+|   19   |  all from model 11 + INC2 + INC7 + OVWT + OBESE +  AGE3                                                                                                            |  all except DRKWEEKLY                          |  0.06257             | INC2=0.05 and INC7=0.05                |
+|   20   |  all from model 11 + INC2 + INC7 + OVWT + OBESE +  AGE3 + UDNWT                                                                                                      |  all except DRKWEEKLY, UNDWT                   |  0.06256             | INC2=0.05 and INC7=0.05                |
+|   21   |  all from model 11 + INC2 + INC7 + OVWT + OBESE +  AGE3 + LOWED                                                                                                      |  all except DRKWEEKLY                          |  0.0626              | INC2=0.05, INC7,SOMECOLL,LOWED=0.1     |
+|   22   |  all from model 11 + INC2 + INC7 + OVWT + OBESE +  AGE3 + LOWED + NOEXER                                                                                               |  all except DRKWEEKLY, LOWED, NOEXER           |  0.06258             | INC2=0.05 and INC7,SOMECOLL=0.1        |
+|   23   |  all from model 11 + INC2 + INC7 + OVWT + OBESE +  AGE3 + LOWED + NOPLAN                                                                                               |  all except DRKWEEKLY, NOPLAN                  |  0.06258             | INC2=0.05 and INC7,SOMECOLL,LOWED=0.1  |
+|   24   |  all from model 11 + INC2 + INC7 + OVWT + OBESE +  AGE3 + LOWED + AGE2                                                                                                 |  all except DRKWEEKLY, LOWED,AGE2              |  0.06259             | INC2=0.05 and INC7,SOMECOLL=0.1        |
+|   25   |  all from model 11 + INC2 + INC7 + OVWT + OBESE +  AGE3 + LOWED + INC1                                                                                                 |  all except DRKWEEKLY, INC1                    |  0.06258             | INC2=0.05 and INC7,SOMECOLL,LOWED=0.1  |
+|   26   |  all from model 11 + INC2 + INC7 + OVWT + OBESE +  AGE3 + LOWED + INC3                                                                                                 |  all except DRKWEEKLY, INC3                    |  0.06261             | INC2,INC7=0.05 and SOMECOLL,LOWED=0.1 |
+|   27   |  all from model 11 + INC2 + INC7 + OVWT + OBESE +  AGE3 + LOWED + INC4                                                                                                 |  all except DRKWEEKLY, LOWED,INC4              |  0.06261             | INC2=0.05 and INC7,SOMECOLL=0.1 |
+|   28   |  all from model 11 + INC2 + INC7 + OVWT + OBESE +  AGE3 + LOWED + INC5                                                                                                 |  all except DRKWEEKLY, LOWED,INC5              |  0.06262             | INC2=0.05 and INC7,SOMECOLL=0.1 |
+|   29   |  all from model 11 + INC2 + INC7 + OVWT + OBESE +  AGE3 + LOWED + INC6                                                                                                 |  all except DRKWEEKLY, INC6                    |  0.06261             | INC2,INC7=0.05 and SOMECOLL,LOWED=0.1 |
+|   30   |  all from model 11 + INC2 + INC7 + OVWT + OBESE +  AGE3 + LOWED + MALE                                                                                                 |  all except DRKWEEKLY, LOWED,MALE              |  0.06258             | INC2=0.05 and INC7,SOMECOLL=0.1 |
+|   31   |  all from model 11 + INC2 + INC7 + OVWT + OBESE +  AGE3 + DRKMONTHLY                                                                                                 |  all except DRKWEEKLY, DRKMONTHLY              |  0.06259             | INC2=0.05 and INC7,SOMECOLL,LOWED=0.1 |
+| Final  |  DRKMONTHLY + DRKWEEKLY + AGE3 + AGE4 + AGE5 + AGE6  + HISPANIC + BLACK + ASIAN + OTHRACE + FORMERMAR +  NEVERMAR + LOWED + SOMECOLL + INC2 + INC7 + OVWT +  OBESE + SMOKER + FAIRHLTH + POORHLTH  |  all except DRKWEEKLY, DRKMONTHLY              |  0.06259             | INC2=0.05 and INC7,SOMECOLL,LOWEDL=0.1 |
+"
+cat(tabl4)
+```
+  
+&nbsp;
+
+From now on I will run the models below and will keep adding the results to tabl4.  
+Without including all the models in the html version of this markdown, we will run 32 models, adding and removing variables and adding the metadata to our column above.
+```{r}
+#smoker is significant
+#add Hispanic
+Model5 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC, data=analytic) 
+summary(Model5)
+```
+*added hispanic to the stepwise process.*  
+
+&nbsp;
+&nbsp;
+
+```{r, include=FALSE}
+
+#Hispanic significant
+#add race
+Model6 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE, data=analytic) 
+summary(Model6) 
+```
+
+```{r, include=FALSE}
+#Race vars significant
+#marital status
+Model7 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR, data=analytic) 
+summary(Model7)
+```
+
+```{r, include=FALSE}
+#Marital significant
+#Gen health
+Model8 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH, data=analytic) 
+summary(Model8)
+```
+
+
+```{r, include=FALSE}
+#Gen Hlth significant
+#health plan
+Model9 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + NOPLAN, data=analytic) 
+summary(Model9)
+```
+
+```{r, include=FALSE}
+#take out NOPLAN
+#try education
+Model10 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + LOWED + SOMECOLL, data=analytic) 
+summary(Model10)
+```
+
+Notice now that we removed 'LOWED' as it was not significant on the previous model.
+```{r, include=FALSE}
+#take out LOWED
+Model11 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL, data=analytic) 
+summary(Model11)
+```
+
+```{r, include=FALSE}
+#add income
+Model12 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC1 + INC2 + INC3 + INC4 + INC5 + INC6 + INC7, data=analytic) 
+summary(Model12)
+```
+
+```{r, include=FALSE}
+#remove insignificant income variables
+Model13 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7, data=analytic) 
+summary(Model13)
+```
+
+```{r, include=FALSE}
+#add BMI
+Model14 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7 + UNDWT + OVWT + OBESE, data=analytic) 
+summary(Model14)
+```
+
+```{r, include=FALSE}
+#take out UNDWT
+Model15 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7 + OVWT + OBESE, data=analytic) 
+summary(Model15)
+```
+
+```{r, include=FALSE}
+#add exercise
+Model16 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7 + OVWT + OBESE + NOEXER, data=analytic) 
+summary(Model16)
+```
+
+```{r, include=FALSE}
+#take out noexer
+#add back male
+Model17 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7 + OVWT + OBESE + MALE, data=analytic) 
+summary(Model17)
+```
+
+```{r, include=FALSE}
+#take out male
+#add back AGE2 and AGE3
+Model18 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7 + OVWT + OBESE + AGE2 + AGE3, data=analytic) 
+summary(Model18)
+```
+
+```{r, include=FALSE}
+#remove AGE2
+Model19 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7 + OVWT + OBESE + AGE3, data=analytic) 
+summary(Model19)
+```
+
+```{r, include=FALSE}
+#add back UNDWT
+Model20 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7 + OVWT + OBESE + AGE3 + UNDWT, data=analytic) 
+summary(Model20)
+```
+
+```{r, include=FALSE}
+#remove UNDWT
+#add back LOWED
+Model21 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7 + OVWT + OBESE + AGE3 + LOWED, data=analytic) 
+summary(Model21)
+```
+
+&nbsp;
+
+Model 21 is our final model. We can see that the variables DRKMONTHLY and DRKWEEKLY were not significant, not supporting our hypothesis.
+
+We are not done yet! Now we have to try to break the model.
+
+Conclusion:
+Iterative process - making models
+Keeping track of decisions
+  - notes in code
+  - notes in metadata
+Trying all our confounders
+Nowe have a working model 3
+
+```{r, include=FALSE}
+#Model21 is working final model
+
+#add back NOEXER
+Model22 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7 + OVWT + OBESE + AGE3 + LOWED + NOEXER, data=analytic) 
+summary(Model22)
+```
+
+
+```{r, include=FALSE}
+#screws up LOWED
+#remove NOEXER
+#add back NOPLAN
+Model23 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7 + OVWT + OBESE + AGE3 + LOWED + NOPLAN, data=analytic) 
+summary(Model23)
+```
+
+```{r, include=FALSE}
+#remove NOPLAN
+#add back AGE2
+Model24 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7 + OVWT + OBESE + AGE3 + LOWED + AGE2, data=analytic) 
+summary(Model24)
+```
+
+```{r, include=FALSE}
+#remove AGE2
+#add back INC1
+Model25 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7 + OVWT + OBESE + AGE3 + LOWED + INC1, data=analytic) 
+summary(Model25)
+```
+
+```{r, include=FALSE}
+#remove INC1
+#add back INC3
+Model26 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7 + OVWT + OBESE + AGE3 + LOWED + INC3, data=analytic) 
+summary(Model26)
+```
+
+```{r, include=FALSE}
+#remove INC3
+#add back INC4
+Model27 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7 + OVWT + OBESE + AGE3 + LOWED + INC4, data=analytic) 
+summary(Model27)
+```
+
+```{r, include=FALSE}
+#remove INC4
+#add back INC5
+Model28 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7 + OVWT + OBESE + AGE3 + LOWED + INC5, data=analytic) 
+summary(Model28)
+```
+
+```{r, include=FALSE}
+#remove INC5
+#add back INC6
+Model29 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7 + OVWT + OBESE + AGE3 + LOWED + INC6, data=analytic) 
+summary(Model29)
+```
+
+```{r, include=FALSE}
+#remove INC6
+#add back MALE
+Model30 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + SOMECOLL
+	+ INC2 + INC7 + OVWT + OBESE + AGE3 + LOWED + MALE, data=analytic) 
+summary(Model30)
+```
+
+```{r}
+#remove MALE
+#add back DRKMONTHLY
+Model31 = lm(SLEPTIM2 ~ DRKWEEKLY + AGE3 + AGE4 + AGE5 + AGE6 
+	+ SMOKER + HISPANIC + BLACK + ASIAN + OTHRACE + NEVERMAR + FORMERMAR
+	+ FAIRHLTH + POORHLTH + LOWED + SOMECOLL
+	+ INC2 + INC7 + OVWT + OBESE + DRKMONTHLY, data=analytic) 
+summary(Model31)
+```
+  
+&nbsp;  
+&nbsp;  
+
+Now we need to:
+- clean up the final model
+- output a tidy model
+- run a coefficient plot
+- revist our assumptions
+    - normal probability (QQ plot)
+    - residuals vs. fitted plot
+- other final model diagnostics
+
+&nbsp;
+
+```{r}
+###FINAL MODEL
+FinalLinearRegressionModel = lm(SLEPTIM2 ~ DRKMONTHLY + DRKWEEKLY + AGE3 + AGE4 + AGE5 + AGE6 
+	+ HISPANIC + BLACK + ASIAN + OTHRACE + FORMERMAR + NEVERMAR
+	+ LOWED + SOMECOLL + INC2 + INC7 
+	+ OVWT + OBESE + SMOKER + FAIRHLTH + POORHLTH, data=analytic) 
+summary(FinalLinearRegressionModel)
+```
+
+&nbsp;  
+
+Now we will tidy up the model and output it as a .csv.  
+```{r}
+#output as CSV
+#library (devtools)
+#library (broom)
+
+Tidy_FinalModel <- tidy(FinalLinearRegressionModel)
+write.csv(Tidy_FinalModel, file = "./outputs/FinalLinearRegressionModel.csv")
+```
+
+&nbsp;  
+
+Now we will make a coefficient plot. The slopes are estimates, we will 95% confidence interval around them and will make a coefficient plot, making it easier to interpret. In general, these are not used in publications but can be helpful to understand your data.
+    
+```{r}
+#coefficient plot
+#library(arm)
+
+#default plot
+coefplot(FinalLinearRegressionModel)
+```
+On the left are all our covariates. If something falls on zero, there is no slope. LOWED is close to zero here. What is to the left of the zero is associated with reduced sleep duration. That's what going on to increase sleep duration, which can be seen to the right of the zero.  
+
+For the covariates that have 95% confidence interval with a wide range (the line crossing each point in the plot) it may be because they have a small sampling.  
+
+This is a good plot to visualize where the estimates are are in relation to each other
+
+```{r}
+#Final model diagnostics
+layout(matrix(c(1,2,3,4),2,2)) # optional 4 graphs/page 
+plot(FinalLinearRegressionModel, 
+	main = "Final Linear Regression Model")
+```
+
+```{r}
+#Model fit diagnostics
+#library(gvlma)
+gvmodel <- gvlma(FinalLinearRegressionModel) 
+summary(gvmodel)
+```
+*Note that the assumptions were not satisfied! The model is not good.*  
+
+&nbsp;  
+
+So now what? What if it's not a good model?
+- Report that the hypothesis not supported
+- report what was found and add cofounders that were significant in the model
+
+ &nbsp;  
+ 
+What can be done to try to better fit the model to your data?
+
+Did not fit our model very well
+Different approaches to improve it
+Fishing -> illegal!
+  It consists in going back to brfss and getting more variables and add them to try see if the model gets a better fit to the data. This is called post-hoc analyses. It is illegal in statistics slant because it increases type I error rate (the likelihood you find something and is just a coincidence, it is real.  
+
+Adding interactions -> legal, but not recommended  
+  Inflates adjusted r-squared, unhypothesized, impossible to interpret.
+  For example, idea that sleep duration varies wheter you are older or not, whether you are black or not, but also whether you are older and black (which would be (black * age). It is like hypothesizing a double whammy.
+
+&nbsp;
+&nbsp;
+  
+##Chapter4 - Section5
+```{r}
+#read in analytic table
+
+#analytic <- read.csv(file="/Users/deisejpg/git_repositories/courses/Healthcare_Regression_R/data/ch00_analytic.csv", header=TRUE, sep=",")
+
+#Interaction Example
+#Add black times age interaction
+InteractionModel = lm(SLEPTIM2 ~ DRKMONTHLY + DRKWEEKLY + AGE3 + AGE4 + AGE5 + AGE6 
+	+ HISPANIC + BLACK + ASIAN + OTHRACE + FORMERMAR + NEVERMAR
+	+ LOWED + SOMECOLL + INC2 + INC7 
+	+ OVWT + OBESE + SMOKER + FAIRHLTH + POORHLTH
+	+ (BLACK*AGE3) + (BLACK*AGE4) + (BLACK*AGE5) + (BLACK*AGE6), data=analytic) 
+summary(InteractionModel)
+```
+
+Do not fish
+  - do not go back and use variables you never hypothesized belong in the model
+Use interattions at your risk because they become too difficult to interpret in health care analyses.
+
+There are still different approaches to improve the the model when it doesn't fit very well like ours didn't.
+  - working on the dependent variable
+  - doing a nonparametric analyses
+
+Could we improve model fit somehow?
+  - Making the dependent variable more normally distributed?
+      - can take the log of SLEPTIM2 and model
+          how would you interpret the log of sleep time?
+      - other similar transformations
+  - In this model, one of the biggest problems is the violations of the linearity assumption. A non-parametric analysis won't assume anything about the shape of the data, it uses ranks, and won't violate assumptions. A non-parametric analysis is weaker than a parametric analysis (because you lose data). Usually, the results are not very much different.
+
+Conclusion
+You could try to work on the dependent variable
+- log transformation is one approach
+- it probably won't change the outcome when you have big data
+
+You could try a nonparametric approach
+- again, it probably won't change the outcome when you are dealing with big data
+
+
+Our moel did not fit very well.  
+But we think it's the best we can do.  
+Not everyone will agree!  
+You will receive common pushback from colleagues.  
+There are ways to defend your model.  
+
+&nbsp;
+
+Problem
+Covariates in the model.
+Solution
+Rmove them! Keep only the exposure covariates that are not significant.
+
+Problem
+Keep non-significant covariates in the model just to show that they are there
+Solution
+Put them in but explain in the paper why they are there
+
+Problem
+Want you to add interactions
+Solution
+It is hard to interpret those models. If you opt to do it, do a model 3 and keep the model 3 but add a model 4 with the interactions and explain why you added that and that the final model is model 3.
+
+Problem
+Want you to add weights in an analytics analysis
+Solution
+Explain why we are not using hte weights. Find a package that specifically let you add the weights, and present the model with weights are model 4, while keeping your model 3 as the final model as model 4 will be technically wrong.
+
+Problem  
+Want to log-transform or do something similar to the dependent variable
+Solution  
+Explain that it is complicated to interpret in healthcare analyses. In case you opt to do it, keep model 3 and get a model 4 with this dependent variable alongside model3.
+
+Problem  
+Want you to go fishing
+Solution
+Educate team on why it is not ethical to fishing and refuse to be a co-author in the paper if they opt to go fishing.  
+
+Problem
+Want a nonparametric analyses
+Solution
+Do one and call it model 4 and present it alongside model3.
+
+Problem  
+Want you to start over with new variables  
+Solution
+Stop working with people that make these type of requests.
+
+Defend the final model
+Be willing to make changes that do not hurt the analysis  
+Be willing to make experimental model 4s
+get out if it gets bad!
+
+What the big table shows?
+
+Model 1. base model
+Model 2. adjusted model
+Model 3. fully adjusted model
+For each mode, the table includes
+  parameters estimates (slopes and betas)
+  p-value classifications  
+
+##Chapter5 - Section
+```{r}
+
+```
+
+
+##Chapter5 - Section
+```{r}
+
+```
+
+
+##Chapter6 - Section
+```{r}
+
+```
+
+
+
+
+##Chapter7 - Section
+```{r}
+
+```
+
+##Chapter7 - Section
+```{r}
+
+```
+
+
