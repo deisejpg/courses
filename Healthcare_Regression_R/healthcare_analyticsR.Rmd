@@ -921,34 +921,163 @@ For each mode, the table includes
   parameters estimates (slopes and betas)
   p-value classifications  
 
-##Chapter5 - Section
+##Chapter 5 - Sections 1 to 3  
+  
+Analogies between linear regression and logistic regression.  
+- Different ways to present the final model
+- Different parameter estimates
+- Different model statistics
+- Different approaches to assumption checking and dependent variables  
+
+Logistic Regression uses a binary variable yes/no whereas linear regression uses a continuous dependent variable.  
+Logistic Regression doesn't need as much work to check assumptions and model fit as much as linear regression.
+Logistic Regression uses AIC and -2 log-likelihood to check model fit whereas linear regression uses ANOVA and adjusted r-squared.
+Logistic Regression uses B from log(p/1-p) = a + bx where p is the probability of "yes" (log odds) whereas in linear regression we use Betas from y-hat = bx + a.
+Logistic Regression presents the model as log odds of probabilities while linear regression presents the model as parameter estimates and p-values.
+
+LR we are modelling the log odds of the probabilities not a function to predict the value like in linear regression.
+
+Parameter estimates in logistic regression
+Get the log odds and the 95% confidence interval of the log odds ratio as a postprocessing.
+
+In a Logistic Regression analyses in R we get the log odds and the standard error. The ultimate goal is to get odss ratio and teh 95% confidence interval.  
+The first thing we do after running R, is to multiply the standard error by the Z-score to get the 95% confidence interval.
+Next, to get the upper and lower limit I add and subtract the log odds to the log odds 95% confidence interval.
+To get the odds ratio I will exponentiate the log odss, th elower limit and the upper limit.
+  
+&nbsp;  
+  
+Why don't we present p-values?
+P-values are redundant because if the 95% CI does not contain 1, then the odds ration is statistically significant.
+If the confidence interval is 1 it is not statistically significant. Pay attention to confidence intervals that start or end too close to 1 as well.  
+If the odds ratio is greater than 1, whoever is on top has more risk.
+If the odds ration is less than 1, whoever is on top has less risk.
+
+&nbsp;  
+
+##Chapter5 - Sections 4 to 6  
+Here we will follow a similar approach of what we did for linear regression, starting with three models (model 1 is the vanilla model, model 2 adding age and sex, model 3 is fully asjusted after testing all the covaraites). Here we will use ASTHMA yes/no instead of sleep time.  
+To start, use glm() to run a general linear model and save the result in the object LogModel1.    
+Then use summary() to see the model.  
+Let's start with model 1:
+```{r}
+#read in analytic table
+#analytic <- read.csv(file="/Users/deisejpg/git_repositories/courses/Healthcare_Regression_R/data/ch00_analytic.csv", header=TRUE, sep=",")
+
+#make Model 1
+LogModel1 <- glm(ASTHMA4 ~ DRKMONTHLY + DRKWEEKLY, data=analytic, family = "binomial") 
+summary(LogModel1)
+```
+
+Forward Stepwise Regression is done in three rounds  
+
+Round 1
+We build models 1 and 2 with fully specified models  
+  model 1 - just the exposure
+  model 2 - add sex and age
+            look at model 2 and see which are significant; if some are not they should not be included in the next round  
+Rounds 2 - trying all variables  
+Begin to build the forward stepwise model
+- start with 1 exposure and 2 significant covariates from model 2
+- look at all the variables in your descriptive table
+- try to add one variable or a set of indicator variables and see what happens
+    - if a variable is not significant -> do not include it in the next model iteration
+    - if a variable is significant -> do add it to the next model iteration
+- leave the data dictionary and the excel file with all the variables listed in table 1 which is also where I will keep track of standard deviation and log odds.
+- at the end I will have a candidate model, it is not the final model because I will have to try to break it before considering it is final
+
+Round 3  
+Make sure you have a final model  
+Make sure it is a robust model  
+
+Do that by trying to break the model!   
+
+Take variables that were previously removed, add them back one at a time, run the model, and see if now the variable has a better fit.  
+Confirm you have a candidate final model where all covariates are significant or very close to significant.  
+  
+It is possible to automate this process, but it is important to run it in this way to have a dee and comprehensive view of your data.  
+
+
+&nbsp; 
+
+##Chapter 6 - Section 1  
+  
+Continuing model 1... using tidy to prepare the data from model 1 to be saved in a csv file like we did before for linear regression models.
+```{r}
+#library (devtools)
+#library (broom)
+
+Tidy_LogModel1 <- tidy(LogModel1)
+Tidy_LogModel1
+```
+  
+&nbsp;  
+
+##Chapter 6 - Section 1  
+Now we will calculate and the odds ratio and the 95% confidence interval.  
+
+```{r}
+#Add postprocessing calculations
+#start a column called OR to put the exponentiated the field with
+#log odds in it, which is called 'estimate' here
+Tidy_LogModel1$OR <- exp(Tidy_LogModel1$estimate)
+
+#LL refers to lower limit and Ul refers to upper limit
+#the limits are calculated by exponentiating the result of adding/subtracting the product 
+#of the standard error by 1.96 which is the margin of error
+Tidy_LogModel1$LL <- exp(Tidy_LogModel1$estimate - (1.96 * Tidy_LogModel1$std.error))
+Tidy_LogModel1$UL <- exp(Tidy_LogModel1$estimate + (1.96 * Tidy_LogModel1$std.error))
+Tidy_LogModel1
+
+#write.csv(Tidy_LogModel1, file = "./outputs/LogisticRegressionModel1.csv")
+```
+  
+&nbsp;  
+  
+##Chapter 6 - Section 2  
+
+Now let's run model 2.  
+
+```{r}
+#make Model 2
+LogModel2 <- glm(ASTHMA4 ~ DRKMONTHLY + DRKWEEKLY + MALE + AGE2 + AGE3 + AGE4 + AGE5 + AGE6, data=analytic, family = "binomial") 
+summary(LogModel2) 
+
+#Add calculations
+Tidy_LogModel2 <- tidy(LogModel2)
+Tidy_LogModel2$OR <- exp(Tidy_LogModel2$estimate)
+Tidy_LogModel2$LL <- exp(Tidy_LogModel2$estimate - (1.96 * Tidy_LogModel2$std.error))
+Tidy_LogModel2$UL <- exp(Tidy_LogModel2$estimate + (1.96 * Tidy_LogModel2$std.error))
+#write.csv(Tidy_LogModel2, file = "outputs/LogisticRegressionModel2.csv")
+```
+  
+&nbsp;  
+  
+##Chapter 6 - Section 3  
+Model table metadata:  
+
+```{r table5, echo=FALSE, message=FALSE, results='asis'}
+tabl5 <- "
+| models | covariates | significant covariates | comments |
+| ------ | ---------- | :--------------------: | -------: |
+|        |            |                        |          |
+"
+cat(tabl5)
+```
+
+
 ```{r}
 
 ```
 
 
-##Chapter5 - Section
-```{r}
 
-```
-
-
-##Chapter6 - Section
 ```{r}
 
 ```
 
 
 
-
-##Chapter7 - Section
 ```{r}
 
 ```
-
-##Chapter7 - Section
-```{r}
-
-```
-
-
