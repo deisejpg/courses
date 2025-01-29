@@ -1,6 +1,6 @@
 __2025 update__  
 __The last couple of years had been the best of my life!__   
-Landed a job in industry, got married, and started a family! While I was gaining  
+I landed a job in industry, got married, and started a family! While I was gaining  
 experience at my first industry job and enjoying the new world of parenthood, I didn't  
 have much time to take/complete courses and went on a learn-on-the-fly long ride.  
 
